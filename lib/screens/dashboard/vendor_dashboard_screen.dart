@@ -2,29 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:parlor_vendor_app/models/booking_model.dart';
 import 'package:parlor_vendor_app/repositories/booking_repository.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class VendorDashboardScreen extends StatefulWidget {
-  const VendorDashboardScreen({super.key});
+  final String branchId;
+  const VendorDashboardScreen({super.key, required this.branchId});
 
   @override
   State<VendorDashboardScreen> createState() => _VendorDashboardScreenState();
 }
 
 class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
-  // Constant hardcoded branchId for Glamour Studio
-  static const String _branchId = '6GbfVWLVAEFfbswzYXaA';
-
   late Stream<List<Booking>> _bookingsStream;
   final BookingRepository _bookingRepository = BookingRepository();
 
   @override
   void initState() {
     super.initState();
-    // Initialize the stream to query 'bookings' collection where branchId equals our hardcoded ID,
+    // Initialize the stream to query 'bookings' collection where branchId equals our dynamic ID,
     // ordered by createdAt descending. Map the snapshot docs to Booking models.
     _bookingsStream = FirebaseFirestore.instance
         .collection('bookings')
-        .where('branchId', isEqualTo: _branchId)
+        .where('branchId', isEqualTo: widget.branchId)
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs
@@ -195,7 +194,13 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
               // Trigger a reload / rebuild if needed
               setState(() {});
             },
-          )
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.redAccent),
+            tooltip: 'Logout',
+            onPressed: () => FirebaseAuth.instance.signOut(),
+          ),
+          const SizedBox(width: 8),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
