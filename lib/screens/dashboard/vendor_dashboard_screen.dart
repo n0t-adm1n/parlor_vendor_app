@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:parlor_vendor_app/models/booking_model.dart';
 import 'package:parlor_vendor_app/repositories/booking_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class VendorDashboardScreen extends StatefulWidget {
   final String branchId;
@@ -19,6 +20,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
   @override
   void initState() {
     super.initState();
+    _setupPushNotifications();
     // Initialize the stream to query 'bookings' collection where branchId equals our dynamic ID,
     // ordered by createdAt descending. Map the snapshot docs to Booking models.
     _bookingsStream = FirebaseFirestore.instance
@@ -29,6 +31,22 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         .map((snapshot) => snapshot.docs
             .map((doc) => Booking.fromFirestore(doc))
             .toList());
+  }
+
+  Future<void> _setupPushNotifications() async {
+    final messaging = FirebaseMessaging.instance;
+    await messaging.requestPermission();
+    final token = await messaging.getToken();
+    
+    if (token != null) {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await FirebaseFirestore.instance
+            .collection('vendor_users')
+            .doc(user.uid)
+            .set({'fcmToken': token}, SetOptions(merge: true));
+      }
+    }
   }
 
   // Format DateTime without external dependencies for clean, reliable display
