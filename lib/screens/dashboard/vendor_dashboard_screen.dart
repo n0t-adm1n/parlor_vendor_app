@@ -263,8 +263,18 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
 
           final bookings = snapshot.data ?? [];
 
+          final now = DateTime.now();
+          final todayBookings = bookings.where((b) => 
+            b.status == BookingStatus.completed &&
+            b.startTime.year == now.year &&
+            b.startTime.month == now.month &&
+            b.startTime.day == now.day
+          );
+          final totalRevenue = todayBookings.fold(0.0, (acc, b) => acc + b.totalPrice);
+
+          Widget content;
           if (bookings.isEmpty) {
-            return Center(
+            content = Center(
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
@@ -297,10 +307,9 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                 ),
               ),
             );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          } else {
+            content = ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             itemCount: bookings.length,
             itemBuilder: (context, index) {
               final booking = bookings[index];
@@ -468,6 +477,54 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                 ),
               );
             },
+          );
+          }
+
+          return Column(
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+                child: Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        colors: [theme.colorScheme.primary, theme.colorScheme.primary.withValues(alpha: 0.8)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Today's Revenue",
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '₹${totalRevenue.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(child: content),
+            ],
           );
         },
       ),
