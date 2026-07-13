@@ -424,7 +424,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                           Row(
                             children: [
                               Text(
-                                '\$${booking.totalPrice.toStringAsFixed(2)}',
+                                '₹${booking.totalPrice.toStringAsFixed(2)}',
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
