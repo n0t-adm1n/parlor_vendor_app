@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:parlor_vendor_app/repositories/vendor_repository.dart';
 import 'package:parlor_vendor_app/screens/profile/add_service_screen.dart';
+import 'package:parlor_vendor_app/screens/profile/edit_service_screen.dart';
 
 class ServiceManagementScreen extends StatefulWidget {
   final String branchId;
@@ -56,39 +57,58 @@ class _ServiceManagementScreenState extends State<ServiceManagementScreen> {
               return ListTile(
                 title: Text(name),
                 subtitle: Text('$category • ₹${price.toStringAsFixed(2)} • $duration mins'),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () async {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Confirm Delete'),
-                        content: Text('Are you sure you want to delete "$name"?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: const Text('Cancel'),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.blue),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditServiceScreen(
+                              serviceId: serviceId,
+                              currentData: service,
+                            ),
                           ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                        );
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Confirm Delete'),
+                            content: Text('Are you sure you want to delete "$name"?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    );
+                        );
 
-                    if (confirm == true) {
-                      try {
-                        await _vendorRepository.removeService(serviceId);
-                      } catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Error removing service: $e')),
-                          );
+                        if (confirm == true) {
+                          try {
+                            await _vendorRepository.removeService(serviceId);
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Error removing service: $e')),
+                              );
+                            }
+                          }
                         }
-                      }
-                    }
-                  },
+                      },
+                    ),
+                  ],
                 ),
               );
             },

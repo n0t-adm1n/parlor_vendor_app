@@ -19,4 +19,8 @@ class VendorRepository {
   Future<void> removeService(String serviceId) async {
     await _firestore.collection('services').doc(serviceId).delete();
   }
+
+  Future<void> updateService(String serviceId, Map<String, dynamic> updatedData) async {
+    await _firestore.collection('services').doc(serviceId).update(updatedData);
+  }
 }
