@@ -19,6 +19,8 @@ class _ServiceManagementScreenState extends State<ServiceManagementScreen> {
     String name = '';
     double price = 0.0;
     int duration = 0;
+    String? selectedCategory;
+    final TextEditingController descriptionController = TextEditingController();
     bool isLoading = false;
 
     showDialog(
@@ -59,6 +61,29 @@ class _ServiceManagementScreenState extends State<ServiceManagementScreen> {
                         },
                         onSaved: (value) => duration = int.parse(value!.trim()),
                       ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        decoration: const InputDecoration(labelText: 'Category'),
+                        value: selectedCategory,
+                        items: const [
+                          DropdownMenuItem(value: 'hair', child: Text('hair')),
+                          DropdownMenuItem(value: 'nail', child: Text('nail')),
+                          DropdownMenuItem(value: 'facial', child: Text('facial')),
+                          DropdownMenuItem(value: 'makeup', child: Text('makeup')),
+                          DropdownMenuItem(value: 'spa', child: Text('spa')),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            selectedCategory = value;
+                          });
+                        },
+                        validator: (value) => value == null ? 'Required' : null,
+                      ),
+                      TextFormField(
+                        controller: descriptionController,
+                        decoration: const InputDecoration(labelText: 'Short Description'),
+                        maxLines: 2,
+                      ),
                     ],
                   ),
                 ),
@@ -82,6 +107,8 @@ class _ServiceManagementScreenState extends State<ServiceManagementScreen> {
                                   'name': name,
                                   'price': price,
                                   'duration': duration,
+                                  'category': selectedCategory,
+                                  'description': descriptionController.text,
                                 },
                               );
                               if (context.mounted) {
@@ -153,7 +180,7 @@ class _ServiceManagementScreenState extends State<ServiceManagementScreen> {
 
               return ListTile(
                 title: Text(name),
-                subtitle: Text('Price: \$${price.toStringAsFixed(2)} | Duration: $duration mins | Category: $category'),
+                subtitle: Text('$category • ₹${price.toStringAsFixed(2)} • $duration mins'),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete, color: Colors.red),
                   onPressed: () async {
