@@ -119,10 +119,10 @@ class _ServiceManagementScreenState extends State<ServiceManagementScreen> {
       appBar: AppBar(
         title: const Text('Service Management'),
       ),
-      body: StreamBuilder<DocumentSnapshot>(
+      body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
-            .collection('branch_details')
-            .doc(widget.branchId)
+            .collection('services')
+            .where('branchId', isEqualTo: widget.branchId)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
@@ -133,28 +133,27 @@ class _ServiceManagementScreenState extends State<ServiceManagementScreen> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (!snapshot.hasData || !snapshot.data!.exists) {
-            return const Center(child: Text('No branch details found.'));
-          }
-
-          final data = snapshot.data!.data() as Map<String, dynamic>?;
-          final List<dynamic> services = data?['services'] ?? [];
-
-          if (services.isEmpty) {
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return const Center(child: Text('No services added yet.'));
           }
+
+          final services = snapshot.data!.docs;
 
           return ListView.builder(
             itemCount: services.length,
             itemBuilder: (context, index) {
-              final service = services[index] as Map<String, dynamic>;
+              final doc = services[index];
+              final service = doc.data() as Map<String, dynamic>;
+              final serviceId = doc.id;
+
               final name = service['name'] ?? 'Unknown';
               final price = service['price'] ?? 0.0;
               final duration = service['duration'] ?? 0;
+              final category = service['category'] ?? 'Uncategorized';
 
               return ListTile(
                 title: Text(name),
-                subtitle: Text('Price: \$${price.toStringAsFixed(2)} | Duration: $duration mins'),
+                subtitle: Text('Price: \$${price.toStringAsFixed(2)} | Duration: $duration mins | Category: $category'),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete, color: Colors.red),
                   onPressed: () async {
@@ -178,7 +177,7 @@ class _ServiceManagementScreenState extends State<ServiceManagementScreen> {
 
                     if (confirm == true) {
                       try {
-                        await _vendorRepository.removeService(widget.branchId, service);
+                        await _vendorRepository.removeService(serviceId);
                       } catch (e) {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
