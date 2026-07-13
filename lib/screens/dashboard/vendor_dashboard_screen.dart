@@ -4,6 +4,7 @@ import 'package:parlor_vendor_app/models/booking_model.dart';
 import 'package:parlor_vendor_app/repositories/booking_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:parlor_vendor_app/screens/profile/service_management_screen.dart';
 
 class VendorDashboardScreen extends StatefulWidget {
   final String branchId;
@@ -206,6 +207,18 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         foregroundColor: Colors.black87,
         centerTitle: false,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.store, color: Colors.black87),
+            tooltip: 'Manage Services',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ServiceManagementScreen(branchId: widget.branchId),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.black87),
             onPressed: () {
