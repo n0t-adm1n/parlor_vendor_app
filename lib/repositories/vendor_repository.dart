@@ -5,11 +5,11 @@ class VendorRepository {
 
   Future<void> addService(String branchId, Map<String, dynamic> serviceData) async {
     final newServiceData = {
-      ...serviceData,
-      'branchId': branchId,
       'isActive': true,
       'image': '',
       'description': '',
+      ...serviceData,
+      'branchId': branchId,
       'createdAt': FieldValue.serverTimestamp(),
     };
     
