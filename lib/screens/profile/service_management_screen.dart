@@ -81,8 +81,13 @@ class _ServiceManagementScreenState extends State<ServiceManagementScreen> {
                       ),
                       TextFormField(
                         controller: descriptionController,
-                        decoration: const InputDecoration(labelText: 'Short Description'),
-                        maxLines: 2,
+                        keyboardType: TextInputType.multiline,
+                        textInputAction: TextInputAction.newline,
+                        maxLines: null,
+                        decoration: const InputDecoration(
+                          labelText: 'Short Description',
+                          contentPadding: EdgeInsets.zero,
+                        ),
                       ),
                     ],
                   ),
