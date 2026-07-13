@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:parlor_vendor_app/repositories/vendor_repository.dart';
+import 'package:parlor_vendor_app/screens/profile/add_service_screen.dart';
 
 class ServiceManagementScreen extends StatefulWidget {
   final String branchId;
@@ -13,137 +14,6 @@ class ServiceManagementScreen extends StatefulWidget {
 
 class _ServiceManagementScreenState extends State<ServiceManagementScreen> {
   final VendorRepository _vendorRepository = VendorRepository();
-
-  void _showAddServiceDialog() {
-    final formKey = GlobalKey<FormState>();
-    String name = '';
-    double price = 0.0;
-    int duration = 0;
-    String? selectedCategory;
-    final TextEditingController descriptionController = TextEditingController();
-    bool isLoading = false;
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text('Add Service'),
-              content: Form(
-                key: formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextFormField(
-                        decoration: const InputDecoration(labelText: 'Service Name'),
-                        validator: (value) => value == null || value.trim().isEmpty ? 'Required' : null,
-                        onSaved: (value) => name = value!.trim(),
-                      ),
-                      TextFormField(
-                        decoration: const InputDecoration(labelText: 'Price'),
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) return 'Required';
-                          if (double.tryParse(value.trim()) == null) return 'Invalid number';
-                          return null;
-                        },
-                        onSaved: (value) => price = double.parse(value!.trim()),
-                      ),
-                      TextFormField(
-                        decoration: const InputDecoration(labelText: 'Duration (mins)'),
-                        keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) return 'Required';
-                          if (int.tryParse(value.trim()) == null) return 'Invalid number';
-                          return null;
-                        },
-                        onSaved: (value) => duration = int.parse(value!.trim()),
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        decoration: const InputDecoration(labelText: 'Category'),
-                        value: selectedCategory,
-                        items: const [
-                          DropdownMenuItem(value: 'hair', child: Text('hair')),
-                          DropdownMenuItem(value: 'nail', child: Text('nail')),
-                          DropdownMenuItem(value: 'facial', child: Text('facial')),
-                          DropdownMenuItem(value: 'makeup', child: Text('makeup')),
-                          DropdownMenuItem(value: 'spa', child: Text('spa')),
-                        ],
-                        onChanged: (value) {
-                          setState(() {
-                            selectedCategory = value;
-                          });
-                        },
-                        validator: (value) => value == null ? 'Required' : null,
-                      ),
-                      TextFormField(
-                        controller: descriptionController,
-                        keyboardType: TextInputType.multiline,
-                        textInputAction: TextInputAction.newline,
-                        maxLines: null,
-                        decoration: const InputDecoration(
-                          labelText: 'Short Description',
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: isLoading ? null : () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: isLoading
-                      ? null
-                      : () async {
-                          if (formKey.currentState!.validate()) {
-                            formKey.currentState!.save();
-                            setState(() => isLoading = true);
-                            try {
-                              await _vendorRepository.addService(
-                                widget.branchId,
-                                {
-                                  'name': name,
-                                  'price': price,
-                                  'duration': duration,
-                                  'category': selectedCategory,
-                                  'description': descriptionController.text,
-                                },
-                              );
-                              if (context.mounted) {
-                                Navigator.pop(context);
-                              }
-                            } catch (e) {
-                              setState(() => isLoading = false);
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Error adding service: $e')),
-                                );
-                              }
-                            }
-                          }
-                        },
-                  child: isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Add'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -226,7 +96,14 @@ class _ServiceManagementScreenState extends State<ServiceManagementScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _showAddServiceDialog,
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AddServiceScreen(branchId: widget.branchId),
+            ),
+          );
+        },
         child: const Icon(Icons.add),
       ),
     );
