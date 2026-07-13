@@ -23,4 +23,8 @@ class VendorRepository {
   Future<void> updateService(String serviceId, Map<String, dynamic> updatedData) async {
     await _firestore.collection('services').doc(serviceId).update(updatedData);
   }
+
+  Future<void> updateBookingStatus(String branchId, bool isActiveStatus) async {
+    await _firestore.collection('branches').doc(branchId).set({'isActive': isActiveStatus}, SetOptions(merge: true));
+  }
 }

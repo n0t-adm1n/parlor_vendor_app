@@ -5,6 +5,7 @@ import 'package:parlor_vendor_app/repositories/booking_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:parlor_vendor_app/screens/profile/service_management_screen.dart';
+import 'package:parlor_vendor_app/repositories/vendor_repository.dart';
 
 class VendorDashboardScreen extends StatefulWidget {
   final String branchId;
@@ -17,6 +18,7 @@ class VendorDashboardScreen extends StatefulWidget {
 class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
   late Stream<List<Booking>> _bookingsStream;
   final BookingRepository _bookingRepository = BookingRepository();
+  final VendorRepository _vendorRepository = VendorRepository();
 
   @override
   void initState() {
@@ -518,6 +520,30 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
 
           return Column(
             children: [
+              StreamBuilder<DocumentSnapshot>(
+                stream: FirebaseFirestore.instance.collection('branches').doc(widget.branchId).snapshots(),
+                builder: (context, branchSnapshot) {
+                  if (!branchSnapshot.hasData) return const SizedBox.shrink();
+                  
+                  final data = branchSnapshot.data!.data() as Map<String, dynamic>?;
+                  final bool isActive = (data?['isActive'] as bool?) ?? true;
+
+                  return Card(
+                    margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    child: SwitchListTile(
+                      title: const Text('Accepting Bookings', style: TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: const Text('Turn off to temporarily hide your salon from customers', style: TextStyle(fontSize: 12)),
+                      value: isActive,
+                      activeColor: theme.colorScheme.primary,
+                      onChanged: (newValue) {
+                        _vendorRepository.updateBookingStatus(widget.branchId, newValue);
+                      },
+                    ),
+                  );
+                },
+              ),
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
