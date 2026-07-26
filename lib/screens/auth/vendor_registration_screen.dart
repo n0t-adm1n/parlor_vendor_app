@@ -73,6 +73,16 @@ class _VendorRegistrationScreenState extends State<VendorRegistrationScreen> {
           },
         });
 
+        // Also create the vendor user profile linking to this branch
+        await FirebaseFirestore.instance.collection('vendor_users').doc(uid).set({
+          'userId': uid,
+          'branchId': uid,
+          'name': _nameController.text.trim(),
+          'email': _emailController.text.trim(),
+          'role': 'owner', // Default role for the creator
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+
         if (mounted) {
           Navigator.pushReplacement(
             context,
