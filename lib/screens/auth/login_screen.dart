@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:parlor_vendor_app/screens/auth/vendor_registration_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -155,6 +156,27 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                 ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Don't have an account?",
+                    style: TextStyle(color: Colors.grey.shade700),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const VendorRegistrationScreen(),
+                        ),
+                      );
+                    },
+                    child: const Text('Sign Up'),
+                  ),
+                ],
               ),
             ],
           ),

@@ -89,11 +89,21 @@ class AuthWrapper extends StatelessWidget {
             final branchId = data?['branchId'] as String?;
 
             if (branchId == null || branchId.isEmpty) {
-              return const Scaffold(
+              return Scaffold(
                 body: Center(
-                  child: Text(
-                    'No branch associated with this vendor profile.',
-                    style: TextStyle(fontSize: 16),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'No branch associated with this vendor profile.',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: () => FirebaseAuth.instance.signOut(),
+                        child: const Text('Sign Out'),
+                      ),
+                    ],
                   ),
                 ),
               );
