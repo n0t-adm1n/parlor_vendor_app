@@ -61,6 +61,8 @@ class Booking {
   final PaymentStatus paymentStatus;
   final Map<String, dynamic> customerSnapshot;
   final List<Map<String, dynamic>> servicesSnapshot;
+  final String serviceLocation;
+  final String customerAddress;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -77,6 +79,8 @@ class Booking {
     required this.paymentStatus,
     required this.customerSnapshot,
     required this.servicesSnapshot,
+    required this.serviceLocation,
+    required this.customerAddress,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -123,6 +127,8 @@ class Booking {
       paymentStatus: (data['paymentStatus'] as String? ?? '').toPaymentStatus(),
       customerSnapshot: customerSnapshotMap,
       servicesSnapshot: servicesSnapshotList,
+      serviceLocation: data['serviceLocation'] as String? ?? 'at_parlor',
+      customerAddress: data['customerAddress'] as String? ?? '',
       createdAt: createdAtValue,
       updatedAt: updatedAtValue,
     );
@@ -141,6 +147,8 @@ class Booking {
       'paymentStatus': paymentStatus.name,
       'customerSnapshot': customerSnapshot,
       'servicesSnapshot': servicesSnapshot,
+      'serviceLocation': serviceLocation,
+      'customerAddress': customerAddress,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
     };
