@@ -15,14 +15,16 @@ class VendorDashboardScreen extends StatefulWidget {
   State<VendorDashboardScreen> createState() => _VendorDashboardScreenState();
 }
 
-class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
+class _VendorDashboardScreenState extends State<VendorDashboardScreen> with SingleTickerProviderStateMixin {
   late Stream<List<Booking>> _bookingsStream;
+  late TabController _tabController;
   final BookingRepository _bookingRepository = BookingRepository();
   final VendorRepository _vendorRepository = VendorRepository();
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 3, vsync: this);
     _setupPushNotifications();
     // Initialize the stream to query 'bookings' collection where branchId equals our dynamic ID,
     // ordered by createdAt descending. Map the snapshot docs to Booking models.
@@ -34,6 +36,12 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         .map((snapshot) => snapshot.docs
             .map((doc) => Booking.fromFirestore(doc))
             .toList());
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _setupPushNotifications() async {
@@ -235,12 +243,16 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
           ),
           const SizedBox(width: 8),
         ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1.0),
-          child: Container(
-            color: Colors.grey.withValues(alpha: 0.2),
-            height: 1.0,
-          ),
+        bottom: TabBar(
+          controller: _tabController,
+          labelColor: theme.primaryColor,
+          unselectedLabelColor: Colors.grey,
+          indicatorColor: theme.primaryColor,
+          tabs: const [
+            Tab(text: 'Today'),
+            Tab(text: 'Upcoming'),
+            Tab(text: 'History'),
+          ],
         ),
       ),
       body: StreamBuilder<List<Booking>>(
@@ -310,9 +322,30 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
           );
           final totalRevenue = todayBookings.fold(0.0, (acc, b) => acc + b.totalPrice);
 
-          Widget content;
-          if (bookings.isEmpty) {
-            content = Center(
+          final todayBookingsList = bookings.where((b) {
+            return b.startTime.year == now.year &&
+                   b.startTime.month == now.month &&
+                   b.startTime.day == now.day;
+          }).toList();
+
+          final today = DateTime(now.year, now.month, now.day);
+          final upcomingBookingsList = bookings.where((b) {
+            final bStart = DateTime(b.startTime.year, b.startTime.month, b.startTime.day);
+            return bStart.isAfter(today) &&
+                   (b.status == BookingStatus.pending || b.status == BookingStatus.confirmed);
+          }).toList();
+
+          final historyBookingsList = bookings.where((b) {
+            final bStart = DateTime(b.startTime.year, b.startTime.month, b.startTime.day);
+            return bStart.isBefore(today) ||
+                   b.status == BookingStatus.completed ||
+                   b.status == BookingStatus.cancelled ||
+                   b.status == BookingStatus.no_show;
+          }).toList();
+
+          Widget buildList(List<Booking> list) {
+            if (list.isEmpty) {
+              return Center(
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
@@ -345,12 +378,13 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                 ),
               ),
             );
-          } else {
-            content = ListView.builder(
+            }
+
+            return ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            itemCount: bookings.length,
-            itemBuilder: (context, index) {
-              final booking = bookings[index];
+              itemCount: list.length,
+              itemBuilder: (context, index) {
+                final booking = list[index];
               final customerName = booking.customerSnapshot['name'] as String? ?? 'Guest';
               final statusColor = _getStatusColor(booking.status);
               final statusBg = _getStatusBgColor(booking.status);
@@ -569,9 +603,18 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                   ),
                 ),
               );
-            },
-          );
+              },
+            );
           }
+
+          final content = TabBarView(
+            controller: _tabController,
+            children: [
+              buildList(todayBookingsList),
+              buildList(upcomingBookingsList),
+              buildList(historyBookingsList),
+            ],
+          );
 
           return Column(
             children: [
