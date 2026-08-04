@@ -34,7 +34,7 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
     duration = widget.currentData['duration'] ?? 0;
     
     // Ensure selected category is valid
-    const validCategories = ['hair', 'nail', 'facial', 'makeup', 'spa'];
+    const validCategories = ['hair', 'nail', 'facial', 'makeup', 'spa', 'mehndi'];
     final category = widget.currentData['category'];
     if (validCategories.contains(category)) {
       selectedCategory = category;
@@ -123,6 +123,7 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
                 DropdownMenuItem(value: 'facial', child: Text('facial')),
                 DropdownMenuItem(value: 'makeup', child: Text('makeup')),
                 DropdownMenuItem(value: 'spa', child: Text('spa')),
+                DropdownMenuItem(value: 'mehndi', child: Text('mehndi')),
               ],
               onChanged: (value) {
                 setState(() {

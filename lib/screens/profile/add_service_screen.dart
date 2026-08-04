@@ -98,6 +98,7 @@ class _AddServiceScreenState extends State<AddServiceScreen> {
                 DropdownMenuItem(value: 'facial', child: Text('facial')),
                 DropdownMenuItem(value: 'makeup', child: Text('makeup')),
                 DropdownMenuItem(value: 'spa', child: Text('spa')),
+                DropdownMenuItem(value: 'mehndi', child: Text('mehndi')),
               ],
               onChanged: (value) {
                 setState(() {
