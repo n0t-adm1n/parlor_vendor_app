@@ -21,16 +21,31 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
   final BookingRepository _bookingRepository = BookingRepository();
   final VendorRepository _vendorRepository = VendorRepository();
 
+  List<Booking> _historyBookings = [];
+  DocumentSnapshot? _lastHistoryDoc;
+  bool _hasMoreHistory = true;
+  bool _isLoadingHistory = false;
+  final ScrollController _historyScrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _setupPushNotifications();
+
+    _historyScrollController.addListener(() {
+      if (_historyScrollController.position.pixels >= _historyScrollController.position.maxScrollExtent - 200) {
+        _fetchHistoryChunk();
+      }
+    });
+    _fetchHistoryChunk();
+
     // Initialize the stream to query 'bookings' collection where branchId equals our dynamic ID,
     // ordered by createdAt descending. Map the snapshot docs to Booking models.
     _bookingsStream = FirebaseFirestore.instance
         .collection('bookings')
         .where('branchId', isEqualTo: widget.branchId)
+        .where('status', whereIn: ['pending', 'confirmed'])
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs
@@ -40,8 +55,52 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
 
   @override
   void dispose() {
+    _historyScrollController.dispose();
     _tabController.dispose();
     super.dispose();
+  }
+
+  Future<void> _fetchHistoryChunk() async {
+    if (_isLoadingHistory || !_hasMoreHistory) return;
+
+    setState(() {
+      _isLoadingHistory = true;
+    });
+
+    try {
+      Query query = FirebaseFirestore.instance
+          .collection('bookings')
+          .where('branchId', isEqualTo: widget.branchId)
+          .where('status', whereIn: ['completed', 'cancelled', 'no_show'])
+          .orderBy('createdAt', descending: true)
+          .limit(15);
+
+      if (_lastHistoryDoc != null) {
+        query = query.startAfterDocument(_lastHistoryDoc!);
+      }
+
+      final snapshot = await query.get();
+
+      if (snapshot.docs.isEmpty) {
+        setState(() {
+          _hasMoreHistory = false;
+          _isLoadingHistory = false;
+        });
+        return;
+      }
+
+      final newBookings = snapshot.docs.map((doc) => Booking.fromFirestore(doc)).toList();
+
+      setState(() {
+        _historyBookings.addAll(newBookings);
+        _lastHistoryDoc = snapshot.docs.last;
+        _isLoadingHistory = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingHistory = false;
+      });
+    }
   }
 
   Future<void> _setupPushNotifications() async {
@@ -335,16 +394,8 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
                    (b.status == BookingStatus.pending || b.status == BookingStatus.confirmed);
           }).toList();
 
-          final historyBookingsList = bookings.where((b) {
-            final bStart = DateTime(b.startTime.year, b.startTime.month, b.startTime.day);
-            return bStart.isBefore(today) ||
-                   b.status == BookingStatus.completed ||
-                   b.status == BookingStatus.cancelled ||
-                   b.status == BookingStatus.no_show;
-          }).toList();
-
-          Widget buildList(List<Booking> list) {
-            if (list.isEmpty) {
+          Widget buildList(List<Booking> list, {ScrollController? scrollController, bool showLoader = false}) {
+            if (list.isEmpty && !showLoader) {
               return Center(
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
@@ -381,11 +432,18 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
             }
 
             return ListView.builder(
+              controller: scrollController,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              itemCount: list.length,
+              itemCount: list.length + (showLoader ? 1 : 0),
               itemBuilder: (context, index) {
+                if (index == list.length) {
+                  return const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
                 final booking = list[index];
-              final customerName = booking.customerSnapshot['name'] as String? ?? 'Guest';
+                final customerName = booking.customerSnapshot['name'] as String? ?? 'Guest';
               final statusColor = _getStatusColor(booking.status);
               final statusBg = _getStatusBgColor(booking.status);
               final statusLabel = _getStatusLabel(booking.status);
@@ -612,7 +670,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
             children: [
               buildList(todayBookingsList),
               buildList(upcomingBookingsList),
-              buildList(historyBookingsList),
+              buildList(_historyBookings, scrollController: _historyScrollController, showLoader: _isLoadingHistory),
             ],
           );
 
