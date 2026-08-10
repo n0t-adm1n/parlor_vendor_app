@@ -49,6 +49,7 @@ class _VendorRegistrationScreenState extends State<VendorRegistrationScreen> {
         await FirebaseFirestore.instance.collection('branches').doc(uid).set({
           'branchId': uid,
           'name': _nameController.text.trim(),
+          'searchName': _nameController.text.trim().toLowerCase()
           'email': _emailController.text.trim(),
           'phone': _phoneController.text.trim(),
           'address': _addressController.text.trim(),
