@@ -49,14 +49,14 @@ class _VendorRegistrationScreenState extends State<VendorRegistrationScreen> {
         await FirebaseFirestore.instance.collection('branches').doc(uid).set({
           'branchId': uid,
           'name': _nameController.text.trim(),
-          'searchName': _nameController.text.trim().toLowerCase()
+          'searchName': _nameController.text.trim().toLowerCase(),
           'email': _emailController.text.trim(),
           'phone': _phoneController.text.trim(),
           'address': _addressController.text.trim(),
           'vendorType': vendorType,
           'isActive': true,
           'businessId': uid,
-          'city': 'Kanpur',
+          'city': 'Kanpur',  // TODO : take the city name from a dropdown in ui
           'geohash': '',
           'location': const GeoPoint(26.4499, 80.3319),
           'rating': 0.0,
