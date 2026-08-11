@@ -20,6 +20,7 @@ class _VendorRegistrationScreenState extends State<VendorRegistrationScreen> {
   final TextEditingController _addressController = TextEditingController();
 
   String vendorType = 'parlor';
+  String selectedCity = 'Kanpur';
   bool _isLoading = false;
 
   @override
@@ -56,7 +57,7 @@ class _VendorRegistrationScreenState extends State<VendorRegistrationScreen> {
           'vendorType': vendorType,
           'isActive': true,
           'businessId': uid,
-          'city': 'Kanpur',  // TODO : take the city name from a dropdown in ui
+          'city': selectedCity,
           'geohash': '',
           'location': const GeoPoint(26.4499, 80.3319),
           'rating': 0.0,
@@ -208,6 +209,25 @@ class _VendorRegistrationScreenState extends State<VendorRegistrationScreen> {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 16),
+
+                DropdownButtonFormField<String>(
+                  initialValue: selectedCity,
+                  decoration: const InputDecoration(
+                    labelText: 'City',
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'Kanpur', child: Text('Kanpur')),
+                    DropdownMenuItem(value: 'Lucknow', child: Text('Lucknow')),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        selectedCity = value;
+                      });
+                    }
+                  },
                 ),
                 const SizedBox(height: 16),
 
