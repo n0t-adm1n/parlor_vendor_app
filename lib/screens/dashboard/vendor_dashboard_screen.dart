@@ -4,6 +4,7 @@ import 'package:parlor_vendor_app/models/booking_model.dart';
 import 'package:parlor_vendor_app/repositories/booking_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:parlor_vendor_app/screens/profile/service_management_screen.dart';
 import 'package:parlor_vendor_app/repositories/vendor_repository.dart';
 
@@ -444,6 +445,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
                 }
                 final booking = list[index];
                 final customerName = booking.customerSnapshot['name'] as String? ?? 'Guest';
+                final phoneNumber = booking.customerSnapshot['phoneNumber'] as String?;
               final statusColor = _getStatusColor(booking.status);
               final statusBg = _getStatusBgColor(booking.status);
               final statusLabel = _getStatusLabel(booking.status);
@@ -470,15 +472,47 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Expanded(
-                            child: Text(
-                              customerName,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            child: Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    customerName,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                if (phoneNumber != null && phoneNumber.isNotEmpty && phoneNumber != 'Not provided')
+                                  IconButton(
+                                    icon: const Icon(Icons.phone_outlined, color: Colors.green),
+                                    onPressed: () async {
+                                      final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
+                                      try {
+                                        if (await canLaunchUrl(phoneUri)) {
+                                          await launchUrl(phoneUri);
+                                        } else {
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(content: Text('Could not launch dialer')),
+                                            );
+                                          }
+                                        }
+                                      } catch (e) {
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('Could not launch dialer')),
+                                          );
+                                        }
+                                      }
+                                    },
+                                    constraints: const BoxConstraints(),
+                                    padding: const EdgeInsets.only(left: 8),
+                                  ),
+                              ],
                             ),
                           ),
                           Container(
